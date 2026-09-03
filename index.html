@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ứng dụng Supabase Cơ Bản</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h2 { text-align: center; color: #333; }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #3ecf8e; /* Màu thương hiệu Supabase */
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover { background-color: #34b27b; }
+        ul { list-style: none; padding: 0; }
+        li {
+            padding: 10px;
+            background: #fff;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        li button {
+            background-color: #ff4d4f;
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        li button:hover { background-color: #d9363e; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Danh Sách Công Việc (Supabase)</h2>
+        
+        <div class="input-group">
+            <input type="text" id="todoInput" placeholder="Nhập công việc mới...">
+            <button onclick="addTodo()">Thêm</button>
+        </div>
+
+        <ul id="todoList">
+            <li>Đang tải dữ liệu...</li>
+        </ul>
+    </div>
+
+    <script>
+        // --- 1. CẤU HÌNH SUPABASE ---
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // Thay bằng URL của bạn
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // Thay bằng Anon Key của bạn
+
+        // Khởi tạo Supabase client
+        const { createClient } = supabase;
+        const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // --- 2. HÀM LẤY DỮ LIỆU (READ) ---
+        async function fetchTodos() {
+            const listEl = document.getElementById('todoList');
+            
+            // Truy vấn bảng 'todos'
+            const { data, error } = await _supabase
+                .from('todos')
+                .select('*')
+                .order('id', { ascending: false });
+
+            if (error) {
+                console.error('Lỗi khi tải dữ liệu:', error);
+                listEl.innerHTML = '<li>Lỗi khi tải dữ liệu từ Supabase.</li>';
+                return;
+            }
+
+            // Hiển thị dữ liệu lên giao diện
+            if (data.length === 0) {
+                listEl.innerHTML = '<li>Chưa có công việc nào.</li>';
+                return;
+            }
+
+            listEl.innerHTML = '';
+            data.forEach(item => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span>${escapeHtml(item.title)}</span>
+                    <button onclick="deleteTodo(${item.id})">Xóa</button>
+                `;
+                listEl.appendChild(li);
+            });
+        }
+
+        // --- 3. HÀM THÊM DỮ LIỆU (CREATE) ---
+        async function addTodo() {
+            const inputEl = document.getElementById('todoInput');
+            const title = inputEl.value.trim();
+
+            if (!title) {
+                alert('Vui lòng nhập nội dung công việc!');
+                return;
+            }
+
+            const { error } = await _supabase
+                .from('todos')
+                .insert([{ title: title }]);
+
+            if (error) {
+                console.error('Lỗi khi thêm:', error);
+                alert('Thêm thất bại!');
+            } else {
+                inputEl.value = ''; // Xóa ô nhập
+                fetchTodos(); // Tải lại danh sách
+            }
+        }
+
+        // --- 4. HÀM XÓA DỮ LIỆU (DELETE) ---
+        async function deleteTodo(id) {
+            const { error } = await _supabase
+                .from('todos')
+                .delete()
+                .eq('id', id);
+
+            if (error) {
+                console.error('Lỗi khi xóa:', error);
+                alert('Xóa thất bại!');
+            } else {
+                fetchTodos(); // Tải lại danh sách
+            }
+        }
+
+        // Hàm phụ trợ chống XSS cơ bản
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        // Chạy hàm lấy dữ liệu ngay khi tải trang xong
+        fetchTodos();
+    </script>
+</body>
+</html>
