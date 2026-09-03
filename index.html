@@ -71,15 +71,16 @@
             <button onclick="addTodo()">Thêm</button>
         </div>
 
-        <ul id="todoList">
+        <ul id="TodoList">
             <li>Đang tải dữ liệu...</li>
         </ul>
     </div>
 
     <script>
         // --- 1. CẤU HÌNH SUPABASE ---
-        const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // Thay bằng URL của bạn
-        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // Thay bằng Anon Key của bạn
+        const SUPABASE_URL = 'https://gexmwoypjfdjkxojkxyh.supabase.co'; // Dán URL của bạn vào đây
+        const SUPABASE_ANON_KEY = 'sb_publishable_LLnDx2wuFQTNnBGzeySrVA_AgzWoJ9I'; // Dán mã anon key dài của bạn vào đây
+        
 
         // Khởi tạo Supabase client
         const { createClient } = supabase;
@@ -87,11 +88,11 @@
 
         // --- 2. HÀM LẤY DỮ LIỆU (READ) ---
         async function fetchTodos() {
-            const listEl = document.getElementById('todoList');
+            const listEl = document.getElementById('TodoList');
             
             // Truy vấn bảng 'todos'
             const { data, error } = await _supabase
-                .from('todos')
+                .from('Todos')
                 .select('*')
                 .order('id', { ascending: false });
 
@@ -129,7 +130,7 @@
             }
 
             const { error } = await _supabase
-                .from('todos')
+                .from('Todos')
                 .insert([{ title: title }]);
 
             if (error) {
@@ -144,7 +145,7 @@
         // --- 4. HÀM XÓA DỮ LIỆU (DELETE) ---
         async function deleteTodo(id) {
             const { error } = await _supabase
-                .from('todos')
+                .from('Todos')
                 .delete()
                 .eq('id', id);
 
