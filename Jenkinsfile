@@ -1,26 +1,37 @@
 pipeline {
     agent any
+
     environment {
-        VERCEL_TOKEN = credentials('vercel-token-id') 
+        TELEGRAM_BOT_TOKEN = '8926239435:AAGKiSWAzg-nWlEOm5GDOY2evXPjMOpBinI' // Thay bằng Bot Token của bạn
+        TELEGRAM_CHAT_ID = '8678496989'     // Thay bằng Chat ID của bạn
     }
+
     stages {
-        stage('Checkout Code') {
+        stage('Checkout') {
             steps {
-                checkout scm
+                echo 'Đang lấy mã nguồn từ GitHub...'
+                // Thêm checkout scm nếu cần
             }
         }
-        stage('Deploy to Vercel') {
+        stage('Build & Test') {
             steps {
-                sh 'export PATH=$PATH:/usr/bin:/usr/local/bin && npx vercel --token $VERCEL_TOKEN --prod --yes'
+                echo 'Đang chạy build ứng dụng...'
             }
         }
     }
+
     post {
         success {
-            echo 'Deploy lên Vercel thành công rực rỡ!'
+            script {
+                def message = "✅ Jenkins Build THÀNH CÔNG!\nProject: Supabase_todo\nBranch: main"
+                sh "curl -s -X POST https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage -d chat_id=${env.TELEGRAM_CHAT_ID} -d text='${message}'"
+            }
         }
         failure {
-            echo 'Pipeline gặp lỗi, vui lòng kiểm tra lại log.'
+            script {
+                def message = "❌ Jenkins Build THẤT BẠI!\nProject: Supabase_todo\nBranch: main"
+                sh "curl -s -X POST https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage -d chat_id=${env.TELEGRAM_CHAT_ID} -d text='${message}'"
+            }
         }
     }
 }
